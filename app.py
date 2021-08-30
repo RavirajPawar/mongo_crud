@@ -35,18 +35,22 @@ def register():
     This endpoint will onboard new user if user hit POST request.
     User need to send first name, last name, email and password
     """
-    data = request.json
-    email = data["email"]
-    password = data["password"]
-    existing_user = mongo.db.accounts.find_one({"email": email})
-    if existing_user:
-        return {"message": "User already exist"}
     try:
+        data = request.json
+        email = data["email"]
+        password = data["password"]
+        existing_user = mongo.db.accounts.find_one({"email": email})
+        if existing_user:
+            return {"message": "User already exist"}
         data["password"] = bcrypt.generate_password_hash(
             password
         )  # encrypting user password
         mongo.db.accounts.insert_one(data)
         return jsonify({"message": "user added successfully"})
+
+    except KeyError:
+        return jsonify({"message": "Pass data using 'email', 'password' keys."})
+
     except:
         return jsonify({"message": "please try again"})
 
@@ -56,10 +60,15 @@ def login():
     """
     This endpoint will take care of user authentication
     """
-    email = request.json["email"]
-    password = request.json["password"]
+
     try:
+        email = request.json["email"]
+        password = request.json["password"]
         existing_user = mongo.db.accounts.find_one({"email": email})
+
+    except KeyError:
+        return jsonify({"message": "Pass data using 'email', 'password' keys."})
+
     except:
         return jsonify({"message": "Try after sometime"})
 
@@ -69,7 +78,7 @@ def login():
                 identity=email, expires_delta=timedelta(days=1)
             )
             return jsonify(
-                {"message": "Login successfully", "access_token": access_token}
+                {"message": "Logged successfully", "access_token": access_token}
             )
         else:
             return jsonify({"message": "Wrong Password"})
