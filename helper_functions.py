@@ -1,5 +1,6 @@
 def get_counter(mongo):
-    "returns counter which is used as ID in appliction"
+    "returns counter which is used as ID in for each document."
+
     output = mongo.db.templates.find_one_and_update(
         {"template_id": "Unique_Key_123"}, {"$inc": {"counter": 1}}
     )
@@ -8,14 +9,18 @@ def get_counter(mongo):
 
 def add_template(mongo, data, current_user):
     """
-    This functtion will add new document in db with addition of owner and id key
-    inputs
-    mongo:- mongo db connection object
-    data:- user passed data
-    current_user:- onwer of document
-    returns
-    message:- status message of operation
+    This functtion will add new template with addition of owner and id key in document.
+        Returns dict with message key.
+
+    Arguments:
+
+    mongo -- Flask mongo db connection object
+
+    data -- user passed data to insert in database
+
+    current_user -- owner of document/logged in user
     """
+
     data["owner"] = current_user
     data["ID"] = get_counter(mongo)
     try:
@@ -27,21 +32,28 @@ def add_template(mongo, data, current_user):
 
 def fetch_template(mongo, current_user, id=None):
     """
-    This functtion will fetch all documents owned by user from db
-    inputs
-    mongo:- mongo db connection object
-    current_user:- owner of documents
+    This functtion will fetch all documents owned by user if not specific ID is not passed
+    else give specific template.
+        Returns dict with message key.
+
+    Arguments:
+
+    mongo -- Flask mongo db connection object
+
+    current_user -- owner of document/logged in user
+
     id:- when want specific template
-    return
-    list of documents/templates added by owner
+
     """
     try:
         if id:
             owner_template = mongo.db.templates.find_one(
-                {"owner": current_user, "ID": int(id)}, {"_id": False, "owner": False}
+                {"owner": current_user, "ID": int(id)},
+                {"_id": False, "owner": False}
             )
             if owner_template == None:
-                owner_template = {"message": "please enter valid ID"}
+                owner_template = {
+                    "message": "please enter valid ID which belongs to you."}
 
         else:
             owner_template = mongo.db.templates.find(
@@ -51,7 +63,7 @@ def fetch_template(mongo, current_user, id=None):
         return owner_template
 
     except ValueError:
-        return {"message": "Please enter numbers for id"}
+        return {"message": "Please enter Integer for id"}
 
     except:
         return {"message": "Try Again."}
@@ -59,28 +71,31 @@ def fetch_template(mongo, current_user, id=None):
 
 def remove_template(mongo, current_user, id):
     """
-    removes template from database using ID and email
-    inputs
-    mongo:- mongo connection object
-    current_user- owner of documents
-    id:- ID of document
-    returns
-    dict of status message
+    This function will remove template which belongs to perticular user.
+        Returns dict with message key.
+
+    Arguments:
+
+    mongo -- Flask mongo db connection object
+
+    current_user -- owner of document/logged in user
+
+    id --- specific template ID
     """
     try:
         removed_document = mongo.db.templates.delete_one(
             {"owner": current_user, "ID": int(id)}
         )
         if removed_document.deleted_count > 0:
-            return {"mesage": "Deleted record"}
+            return {"mesage": "Template Deleted"}
         else:
-            return {"mesage": "Please Enter ID belongs to you"}
+            return {"mesage": "Please Enter ID which belongs to you"}
 
     except ValueError:
-        return {"message": "Please enter number for id"}
+        return {"message": "Please enter Integer for id"}
 
-    except Exception as e:
-        return {"mesage": "Try Again", "exp": e}
+    except Exception:
+        return {"mesage": "Try Again"}
 
 
 def update_template(mongo, current_user, data, id):
@@ -91,11 +106,13 @@ def update_template(mongo, current_user, data, id):
         updated_record = mongo.db.templates.update_one(
             {"owner": current_user, "ID": int(id)}, {"$set": data}
         )
+        if updated_record.modified_count > 0:
+            return {"mesage": "Updated record"}
+        else:
+            return {"mesage": "Please Enter ID which belongs to you"}
 
-        return {"mesage": "Updated record"}
+    except ValueError:
+        return {"message": "Please enter Integer for id"}
 
-    except ValueError as e:
-        return {"message": "Please enter number for id", "exp": str(e)}
-
-    except Exception as e:
-        return {"mesage": "Try Again", "exp": str(e)}
+    except Exception:
+        return {"mesage": "Try Again"}
