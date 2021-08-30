@@ -51,8 +51,8 @@ def register():
     except KeyError:
         return jsonify({"message": "Pass data using 'email', 'password' keys."})
 
-    except:
-        return jsonify({"message": "please try again"})
+    except Exception as e:
+        return jsonify({"message": "please try again", "exp": str(e)})
 
 
 @app.route("/login", methods=["POST"])
