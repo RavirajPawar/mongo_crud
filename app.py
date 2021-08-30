@@ -78,13 +78,13 @@ def login():
                 identity=email, expires_delta=timedelta(days=1)
             )
             return jsonify(
-                {"message": "Logged successfully", "access_token": access_token}
+                {"message": "Logged in successfully", "access_token": access_token}
             )
         else:
             return jsonify({"message": "Wrong Password"})
 
     else:
-        return jsonify({"message": "User is not registered."})
+        return jsonify({"message": "Wrong Email."})
 
 
 @app.route("/template/<id>", methods=["GET", "PUT", "DELETE"])
